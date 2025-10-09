@@ -1,8 +1,10 @@
 // Configuração ofuscada
 const config = (function() {
-    const _0x1a2b = atob('MTkzMDY4NjEzMDc2MzIzOQ=='); // Facebook Pixel ID ofuscado
+    const _0x1a2b = atob('OTE2MTQyNjA3MDQ2MDA0'); // Facebook Pixel ID ofuscado
+    const _0x3c4d = atob('RUFBU0JXV25RV2VFQlB0RHRUdm1PamlBRmN6N1BVRGdhb1JUYWp1ZFhPNTRKV0JCUzdET1ZrMUo3emNWaUREZ3FBTEZIaEluRFpDUlpDT2s5OVpBS2NYbEJBSzl5WkFKaWJJNjlKcjdqOXpicVlUZERYZ2FxV1QxVUNGN1NROXRiWkNwMVc4Mk1kQWlGR2lWVjlHY3FOR0hhc25VQWtJbGx1MzhTZ0RaQ1ZzTGNVVnpoYnZESjk0eWsycldiOGlsb0lFUVpaRFpE'); // API Token ofuscado
     return {
         pixelId: _0x1a2b,
+        apiToken: _0x3c4d,
         sendPageView: !0,
         sendViewContent: !0,
         sendScrollTracking: !0,
@@ -44,6 +46,13 @@ function initializeFacebookPixel() {
     }(window, document,'script', 'https://connect.facebook.net/en_US/fbevents.js');
     const userData = collectUserData();
     fbq('init', config.pixelId, userData);
+    
+    // Configurar API de Conversões
+    if (config.apiToken) {
+        fbq('set', 'accessToken', config.apiToken);
+        console.log('🔑 API de Conversões configurada');
+    }
+    
     console.log('✅ Facebook Pixel inicializado');
 }
 function collectUserData() {
