@@ -6,17 +6,24 @@
     const allowedDomains = [
         atob('Y2xvc2VybGlua3MubWU='), // closerlinks.me
         atob('bG9jYWxob3N0'), // localhost
-        atob('MTI3LjAuMC4x') // 127.0.0.1
+        atob('MTI3LjAuMC4x'), // 127.0.0.1
+        'onrender.com' // Para deploy no Render
     ];
     
     // Verificar se está rodando no domínio correto
     function checkDomain() {
         const currentDomain = window.location.hostname;
         
-        if (!allowedDomains.includes(currentDomain) && 
-            !currentDomain.includes('localhost') && 
-            !currentDomain.includes('127.0.0.1')) {
-            
+        // Permitir se contém qualquer domínio permitido
+        const isAllowed = allowedDomains.some(domain => 
+            currentDomain.includes(domain) || 
+            currentDomain.includes('localhost') ||
+            currentDomain.includes('127.0.0.1') ||
+            currentDomain.includes('closerlinks') ||
+            currentDomain.includes('onrender')
+        );
+        
+        if (!isAllowed) {
             // Se não for domínio permitido, redirecionar ou bloquear
             document.body.innerHTML = `
                 <div style="
