@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: closerlinks
+    env: static
+    buildCommand: echo "No build needed"
+    staticPublishPath: .
+    headers:
+      - path: /*
+        headers:
+          - name: X-Frame-Options
+            value: DENY
+          - name: X-Content-Type-Options
+            value: nosniff
+          - name: X-XSS-Protection
+            value: 1; mode=block
+      - path: /*.css
+        headers:
+          - name: Content-Type
+            value: text/css
+      - path: /*.js
+        headers:
+          - name: Content-Type
+            value: application/javascript
+      - path: /*.webp
+        headers:
+          - name: Content-Type
+            value: image/webp
+      - path: /*.png
+        headers:
+          - name: Content-Type
+            value: image/png
+      - path: /*.svg
+        headers:
+          - name: Content-Type
+            value: image/svg+xml

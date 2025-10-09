@@ -1,0 +1,23 @@
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: no-referrer
+
+/*.css
+  Content-Type: text/css
+
+/*.js
+  Content-Type: application/javascript
+
+/*.webp
+  Content-Type: image/webp
+
+/*.png
+  Content-Type: image/png
+
+/*.svg
+  Content-Type: image/svg+xml
+
+/*.ttf
+  Content-Type: font/ttf
