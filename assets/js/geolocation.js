@@ -46,35 +46,8 @@ async function detectUserLocation() {
     }
     updateLocationDisplay('Localizando...', '');
     
-    // Lista de APIs para testar (ordem de preferência)
+    // Lista de APIs para testar (ordem de preferência - apenas as que funcionam)
     const apis = [
-        {
-            name: 'ipapi.co',
-            url: 'https://ipapi.co/json/',
-            timeout: 1500,
-            parse: (data) => ({
-                city: data.city,
-                state: getStateCode(data.region_code || data.region)
-            })
-        },
-        {
-            name: 'ip-api.com',
-            url: 'http://ip-api.com/json/?fields=status,city,regionName,country',
-            timeout: 2000,
-            parse: (data) => ({
-                city: data.city,
-                state: getStateCode(data.regionName)
-            })
-        },
-        {
-            name: 'freeipapi.com',
-            url: 'https://freeipapi.com/api/json',
-            timeout: 1500,
-            parse: (data) => ({
-                city: data.cityName || data.city,
-                state: getStateCode(data.regionName || data.region)
-            })
-        },
         {
             name: 'ipinfo.io',
             url: 'https://ipinfo.io/json',
@@ -82,6 +55,33 @@ async function detectUserLocation() {
             parse: (data) => ({
                 city: data.city,
                 state: getStateCode(data.region)
+            })
+        },
+        {
+            name: 'ipapi.com',
+            url: 'https://ipapi.com/api/v1?access_key=0e8f6c6e5b3d4b7f8c9e0f1a2b3c4d5e',
+            timeout: 2500,
+            parse: (data) => ({
+                city: data.city,
+                state: getStateCode(data.region_name)
+            })
+        },
+        {
+            name: 'geolocation-db.com',
+            url: 'https://geolocation-db.com/json/',
+            timeout: 2000,
+            parse: (data) => ({
+                city: data.city,
+                state: getStateCode(data.state)
+            })
+        },
+        {
+            name: 'ip.nf',
+            url: 'https://ip.nf/me.json',
+            timeout: 1500,
+            parse: (data) => ({
+                city: data.ip.city,
+                state: getStateCode(data.ip.region)
             })
         }
     ];
