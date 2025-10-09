@@ -1,0 +1,25 @@
+User-agent: *
+Disallow: /assets/
+Disallow: /stellabeghini/assets/
+Disallow: *.js
+Disallow: *.css
+Disallow: *.json
+
+# Bloquear ferramentas de download
+User-agent: wget
+Disallow: /
+
+User-agent: curl
+Disallow: /
+
+User-agent: HTTrack
+Disallow: /
+
+User-agent: SiteSucker
+Disallow: /
+
+User-agent: WebCopier
+Disallow: /
+
+# Sitemap (opcional)
+# Sitemap: https://closerlinks.me/sitemap.xml

@@ -1,11 +1,15 @@
-const config = {
-    pixelId: "1930686130763239",
-    sendPageView: true,
-    sendViewContent: true,
-    sendScrollTracking: true,
-    sendTimeOnPage: true,
-    engagementTimer: 60000
-};
+// Configuração ofuscada
+const config = (function() {
+    const _0x1a2b = atob('MTkzMDY4NjEzMDc2MzIzOQ=='); // Facebook Pixel ID ofuscado
+    return {
+        pixelId: _0x1a2b,
+        sendPageView: !0,
+        sendViewContent: !0,
+        sendScrollTracking: !0,
+        sendTimeOnPage: !0,
+        engagementTimer: 0xea60 // 60000 em hex
+    };
+})();
 function getCookie(name) {
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {

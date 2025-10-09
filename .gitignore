@@ -11,6 +11,12 @@ build/
 .env.local
 .env.production
 
+# API Keys e Configurações Sensíveis
+config.json
+secrets.json
+*.key
+*.pem
+
 # IDE files
 .vscode/
 .idea/
@@ -28,3 +34,11 @@ logs/
 # Temporary files
 tmp/
 temp/
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# Source maps (para ocultar código original)
+*.map
