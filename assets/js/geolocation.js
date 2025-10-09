@@ -1,6 +1,13 @@
 let userLocation = { city: 'São Paulo', state: 'SP' };
 
 function getStateCode(stateName) {
+    if (!stateName) return 'SP';
+    
+    // Se já é sigla (2 caracteres), retornar
+    if (stateName.length === 2) {
+        return stateName.toUpperCase();
+    }
+    
     const stateMap = {
         'Acre': 'AC', 'Alagoas': 'AL', 'Amapá': 'AP', 'Amazonas': 'AM',
         'Bahia': 'BA', 'Ceará': 'CE', 'Distrito Federal': 'DF', 'Espírito Santo': 'ES',
@@ -10,7 +17,8 @@ function getStateCode(stateName) {
         'Rio Grande do Sul': 'RS', 'Rondônia': 'RO', 'Roraima': 'RR', 'Santa Catarina': 'SC',
         'São Paulo': 'SP', 'Sergipe': 'SE', 'Tocantins': 'TO'
     };
-    return stateMap[stateName] || stateName;
+    
+    return stateMap[stateName] || stateMap[stateName.trim()] || 'SP';
 }
 
 function updateLocationDisplay(city, state) {
@@ -26,64 +34,24 @@ function updateLocationDisplay(city, state) {
     }
 }
 
-// APIs otimizadas para velocidade e precisão (Brasil)
-const geoAPIs = [
-    {
-        name: 'ipapi.co',
-        url: 'https://ipapi.co/json/',
-        timeout: 2000,
-        parser: (data) => ({
-            city: data.city,
-            state: data.region_code || getStateCode(data.region)
-        })
-    },
-    {
-        name: 'ip-api.com',
-        url: 'https://ip-api.com/json/?fields=city,regionName,region,country&lang=pt-BR',
-        timeout: 3000,
-        parser: (data) => ({
-            city: data.city,
-            state: getStateCode(data.regionName)
-        })
-    },
-    {
-        name: 'ipgeolocation.io',
-        url: 'https://api.ipgeolocation.io/ipgeo?apiKey=',
-        timeout: 2500,
-        parser: (data) => ({
-            city: data.city,
-            state: data.state_code || getStateCode(data.state_prov)
-        })
-    },
-    {
-        name: 'ipinfo.io',
-        url: 'https://ipinfo.io/json',
-        timeout: 3000,
-        parser: (data) => ({
-            city: data.city,
-            state: data.region
-        })
-    }
-];
-
-async function fetchWithTimeout(url, timeout) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+// Função para validar se dados são confiáveis
+function isValidLocation(city, state) {
+    if (!city || !state) return false;
+    if (city === 'undefined' || state === 'undefined') return false;
+    if (city.length < 2 || state.length < 2) return false;
     
-    try {
-        const response = await fetch(url, {
-            signal: controller.signal,
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
-            }
-        });
-        clearTimeout(timeoutId);
-        return response;
-    } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
+    // Lista de cidades problemáticas conhecidas de IP (região metropolitana)
+    const problematicCities = [
+        'diadema', 'osasco', 'guarulhos', 'são bernardo do campo', 
+        'santo andré', 'mauá', 'ribeirão pires', 'são caetano do sul'
+    ];
+    
+    if (problematicCities.includes(city.toLowerCase())) {
+        console.warn(`⚠️ Cidade ${city} pode ser imprecisa via IP`);
+        return false;
     }
+    
+    return true;
 }
 
 async function detectUserLocation() {
@@ -97,46 +65,52 @@ async function detectUserLocation() {
 
     console.log('📍 Detectando localização...');
     
-    // Primeiro, mostrar localização padrão imediatamente
+    // Mostrar localização padrão imediatamente (por 1 segundo)
     updateLocationDisplay(userLocation.city, userLocation.state);
     
-    // Depois tentar detectar a real
-    for (const api of geoAPIs) {
+    // Aguardar um pouco antes de tentar detectar (mais natural)
+    setTimeout(async () => {
+        // Tentar uma API confiável apenas
         try {
-            console.log(`🔍 Tentando ${api.name}...`);
+            console.log('🔍 Detectando localização real...');
             
-            const response = await fetchWithTimeout(api.url, api.timeout);
+            const response = await fetch('https://ipapi.co/json/', {
+                headers: { 'Accept': 'application/json' },
+                signal: AbortSignal.timeout(3000)
+            });
             
-            if (!response.ok) {
-                console.warn(`⚠️ ${api.name}: HTTP ${response.status}`);
-                continue;
-            }
-            
-            const data = await response.json();
-            const location = api.parser(data);
-            
-            if (location.city && location.state && 
-                location.city !== 'undefined' && location.state !== 'undefined') {
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📡 Dados recebidos:', data);
                 
-                userLocation = { 
-                    city: location.city, 
-                    state: location.state 
-                };
+                let city = data.city;
+                let state = getStateCode(data.region_code || data.region);
                 
-                updateLocationDisplay(location.city, location.state);
-                console.log(`✅ Localização detectada via ${api.name}: ${location.city}, ${location.state}`);
-                return; // Sucesso, parar tentativas
+                // Validar se os dados são confiáveis
+                if (isValidLocation(city, state)) {
+                    // Só atualizar se for diferente do padrão
+                    if (city !== userLocation.city || state !== userLocation.state) {
+                        userLocation = { city, state };
+                        // Transição suave para nova localização
+                        setTimeout(() => {
+                            updateLocationDisplay(city, state);
+                            console.log(`✅ Localização atualizada: ${city}, ${state}`);
+                        }, 500);
+                    }
+                    return;
+                } else {
+                    console.warn(`⚠️ Dados não confiáveis, mantendo padrão`);
+                }
             }
         } catch (error) {
-            console.warn(`⚠️ ${api.name} falhou:`, error.message);
-            continue;
+            console.warn('⚠️ Erro na detecção, mantendo padrão:', error.message);
         }
-    }
-    
-    console.warn('⚠️ Todas as APIs falharam, mantendo localização padrão');
+        
+        console.log('📍 Mantendo São Paulo, SP (padrão)');
+    }, 1500); // Aguardar 1.5 segundos antes de tentar detectar
 }
 
-// Inicializar o mais rápido possível
+// Inicializar
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', detectUserLocation);
 } else {
