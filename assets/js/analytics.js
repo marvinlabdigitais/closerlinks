@@ -116,18 +116,53 @@ function setupLinkTracking() {
         const link = event.target.closest('a');
         if (!link) return;
         const href = link.href;
+        const linkText = link.textContent.trim();
+        const dataName = link.getAttribute('data-name');
+        
         if (!href) return;
-        if (!href.includes(window.location.hostname)) {
-            trackCustomEvent('ExternalLink', {
-                link_url: href,
-                link_text: link.textContent.trim()
+        
+        // Tracking específico por botão
+        if (href.includes('stellabeghini.com/privacy') || dataName === 'Privacy') {
+            trackEvent('Contact', { 
+                contact_method: 'privacy',
+                button_name: 'Privacy'
+            });
+            trackEvent('Lead', {
+                content_name: 'Privacy Button',
+                source: 'bio_link'
             });
         }
+        
+        if (href.includes('stellabeghini.com/redirect') || dataName === 'Telegram' || linkText.includes('TELEGRAM')) {
+            trackEvent('Contact', { 
+                contact_method: 'telegram',
+                button_name: 'Telegram VIP'
+            });
+            trackEvent('Lead', {
+                content_name: 'Telegram VIP Button',
+                source: 'bio_link'
+            });
+        }
+        
+        // Tracking genérico para links externos (excluindo seus domínios)
+        if (!href.includes(window.location.hostname) && 
+            !href.includes('stellabeghini.com') && 
+            !href.includes('closerlinks.me')) {
+            trackCustomEvent('ExternalLink', {
+                link_url: href,
+                link_text: linkText,
+                button_name: dataName || 'unknown'
+            });
+        }
+        
+        // Tracking específico para WhatsApp (caso adicione depois)
         if (href.includes('wa.me') || href.includes('whatsapp')) {
             trackEvent('Contact', { contact_method: 'whatsapp' });
         }
-        if (href.includes('t.me') || href.includes('telegram')) {
-            trackEvent('Contact', { contact_method: 'telegram' });
+        
+        // Tracking específico para Telegram direto
+        if (href.includes('t.me') || href.includes('telegram.me')) {
+            trackEvent('Contact', { contact_method: 'telegram_direct' });
         }
     });
 }
