@@ -12,49 +12,61 @@
         }
     };
     
-    // Anti-debugging
+    // Anti-debugging (muito suave para Instagram bio)
     setInterval(function() {
-        if (window.console && (console.firebug || console.table && /firebug/i.test(console.table()))) {
-            window.location.href = 'about:blank';
-        }
-    }, 1000);
-    
-    // Detectar DevTools
-    let devtools = {open: false, orientation: null};
-    const threshold = 160;
-    
-    setInterval(function() {
-        if (window.outerHeight - window.innerHeight > threshold || 
-            window.outerWidth - window.innerWidth > threshold) {
-            if (!devtools.open) {
-                devtools.open = true;
-                // Redirecionar ou limpar página quando DevTools abrir
-                document.body.style.display = 'none';
-                setTimeout(() => {
-                    document.body.innerHTML = '<h1>Acesso Negado</h1>';
-                }, 500);
+        // Detectar se está vindo do Instagram
+        const isInstagramBrowser = navigator.userAgent.includes('Instagram') || 
+                                  window.location.href.includes('instagram') ||
+                                  document.referrer.includes('instagram');
+        
+        if (window.console && (console.firebug || (console.table && /firebug/i.test(console.table())))) {
+            // Não fazer nada se for mobile ou Instagram
+            if (!navigator.userAgent.match(/iPhone|iPad|Android|Mobile/i) && !isInstagramBrowser) {
+                // Apenas log no console, não redirecionar
+                console.warn('⚠️ DevTools detectado');
             }
-        } else {
-            devtools.open = false;
-            document.body.style.display = 'block';
         }
-    }, 500);
+    }, 10000); // Intervalo bem maior
     
-    // Desabilitar clique direito
-    document.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        return false;
-    });
+    // Detectar DevTools (apenas para desktop não-Instagram)
+    let devtools = {open: false, orientation: null};
+    const isMobile = navigator.userAgent.match(/iPhone|iPad|Android|Mobile/i);
+    const isInstagramBrowser = navigator.userAgent.includes('Instagram');
     
-    // Desabilitar F12, Ctrl+Shift+I, Ctrl+U
-    document.addEventListener('keydown', function(e) {
-        if (e.keyCode === 123 || // F12
-            (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
-            (e.ctrlKey && e.keyCode === 85)) { // Ctrl+U
+    // Pular completamente se for mobile ou Instagram
+    if (!isMobile && !isInstagramBrowser) {
+        setInterval(function() {
+            const threshold = 160;
+            if (window.outerHeight - window.innerHeight > threshold || 
+                window.outerWidth - window.innerWidth > threshold) {
+                if (!devtools.open) {
+                    devtools.open = true;
+                    // Apenas log, não bloquear completamente
+                    console.warn('⚠️ DevTools detectado');
+                }
+            } else {
+                devtools.open = false;
+            }
+        }, 2000); // Intervalo menor apenas para desktop
+    }
+    
+    // Desabilitar clique direito (apenas desktop)
+    if (!navigator.userAgent.match(/iPhone|iPad|Android|Mobile/i) && !navigator.userAgent.includes('Instagram')) {
+        document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
             return false;
-        }
-    });
+        });
+        
+        // Desabilitar F12, Ctrl+Shift+I, Ctrl+U (apenas desktop)
+        document.addEventListener('keydown', function(e) {
+            if (e.keyCode === 123 || // F12
+                (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
+                (e.ctrlKey && e.keyCode === 85)) { // Ctrl+U
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
     
     // Exportar configurações para uso global
     window._config = _0x2f4c;

@@ -14,54 +14,44 @@
     function checkDomain() {
         const currentDomain = window.location.hostname;
         
-        // Permitir se contém qualquer domínio permitido
-        const isAllowed = allowedDomains.some(domain => 
+        // Sempre permitir se estiver vindo do Instagram ou mobile
+        const isInstagramBrowser = navigator.userAgent.includes('Instagram') || 
+                                  document.referrer.includes('instagram') ||
+                                  window.location.href.includes('instagram');
+        const isMobile = navigator.userAgent.match(/iPhone|iPad|Android|Mobile/i);
+        
+        if (isInstagramBrowser || isMobile) {
+            console.log('📱 Acesso via Instagram/Mobile - Permitido');
+            return true;
+        }
+        
+        // Permitir desenvolvimento e produção
+        const isDev = currentDomain.includes('localhost') || 
+                     currentDomain.includes('127.0.0.1') || 
+                     currentDomain.includes('192.168.') ||
+                     window.location.protocol === 'file:';
+        
+        // Permitir domínios de produção
+        const isProd = allowedDomains.some(domain => 
             currentDomain.includes(domain) || 
-            currentDomain.includes('localhost') ||
-            currentDomain.includes('127.0.0.1') ||
             currentDomain.includes('closerlinks') ||
             currentDomain.includes('onrender')
         );
         
-        if (!isAllowed) {
-            // Se não for domínio permitido, redirecionar ou bloquear
-            document.body.innerHTML = `
-                <div style="
-                    position: fixed;
-                    top: 0; left: 0;
-                    width: 100%; height: 100%;
-                    background: #000;
-                    color: #fff;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-family: Arial, sans-serif;
-                    z-index: 99999;
-                ">
-                    <div style="text-align: center;">
-                        <h1>🚫 Acesso Negado</h1>
-                        <p>Este conteúdo só pode ser acessado no domínio oficial.</p>
-                        <p style="opacity: 0.7; font-size: 12px;">Domain: ${currentDomain}</p>
-                    </div>
-                </div>
-            `;
-            
-            // Bloquear scripts
-            Array.from(document.scripts).forEach(script => {
-                script.remove();
-            });
-            
-            return false;
+        // Sempre permitir - bio do Instagram precisa funcionar sempre
+        if (isDev || isProd) {
+            return true;
         }
-        return true;
+        
+        // Para outros casos, apenas avisar mas permitir (bio do Instagram)
+        console.warn('⚠️ Domínio não reconhecido:', currentDomain);
+        return true; // Sempre permitir para bio do Instagram
     }
     
     // Executar verificação
-    if (!checkDomain()) {
-        return;
-    }
+    checkDomain();
     
-    // Verificação contínua (caso alguém mude o domínio via console)
-    setInterval(checkDomain, 5000);
+    // Verificação contínua mais suave
+    setInterval(checkDomain, 30000); // A cada 30 segundos apenas
     
 })();
