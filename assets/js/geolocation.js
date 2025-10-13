@@ -1,12 +1,8 @@
-let userLocation = { city: 'São Paulo', state: 'SP' };
+let userLocation = { city: '', state: '' };
 
 function getStateCode(stateName) {
     if (!stateName) return 'SP';
-    
-    // Se já é sigla (2 caracteres), retornar
-    if (stateName.length === 2) {
-        return stateName.toUpperCase();
-    }
+    if (stateName.length === 2) return stateName.toUpperCase();
     
     const stateMap = {
         'Acre': 'AC', 'Alagoas': 'AL', 'Amapá': 'AP', 'Amazonas': 'AM',
@@ -26,27 +22,72 @@ function updateLocationDisplay(city, state) {
     
     if (locationElement) {
         locationElement.textContent = `${city}, ${state}`;
-        console.log(`📍 Localização atualizada: ${city}, ${state}`);
     }
     if (locContainer) {
         locContainer.classList.remove('loc-loading');
     }
 }
 
-// Múltiplas APIs para garantir precisão
+function tryMaxMindGeoIP2() {
+    return new Promise((resolve, reject) => {
+        if (typeof geoip2 === 'undefined') {
+            reject(new Error('MaxMind GeoIP2 script não carregado'));
+            return;
+        }
+        
+        const onSuccess = (geoipResponse) => {
+            try {
+                const city = geoipResponse.city.names.pt || geoipResponse.city.names.en || 'Não disponível';
+                const state = geoipResponse.subdivisions && geoipResponse.subdivisions[0] 
+                    ? (geoipResponse.subdivisions[0].names.pt || geoipResponse.subdivisions[0].names.en || geoipResponse.subdivisions[0].iso_code)
+                    : 'SP';
+                
+                if (city && city !== 'Não disponível') {
+                    resolve({
+                        city: city,
+                        state: getStateCode(state)
+                    });
+                } else {
+                    reject(new Error('Dados inválidos da MaxMind'));
+                }
+            } catch (error) {
+                reject(error);
+            }
+        };
+        
+        const onError = (error) => {
+            reject(new Error(`MaxMind: ${error.code} - ${error.error}`));
+        };
+        
+        try {
+            geoip2.city(onSuccess, onError);
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
 async function detectUserLocation() {
     const locationElement = document.getElementById('location-text');
     const locContainer = document.querySelector('.loc');
     
     if (!locationElement) return;
 
-    // Mostrar loading inicialmente
     if (locContainer) {
         locContainer.classList.add('loc-loading');
     }
-    updateLocationDisplay('Localizando...', '');
     
-    // Lista de APIs para testar (ordem de preferência - apenas as que funcionam)
+    try {
+        const location = await tryMaxMindGeoIP2();
+        if (location && location.city && location.state) {
+            userLocation = { city: location.city, state: location.state };
+            updateLocationDisplay(location.city, location.state);
+            return;
+        }
+    } catch (error) {
+        // Fallback para APIs gratuitas
+    }
+    
     const apis = [
         {
             name: 'ipinfo.io',
@@ -86,11 +127,8 @@ async function detectUserLocation() {
         }
     ];
     
-    // Tentar cada API até conseguir uma localização válida
     for (const api of apis) {
         try {
-            console.log(`🔍 Testando API: ${api.name}`);
-            
             const response = await fetch(api.url, {
                 headers: { 
                     'Accept': 'application/json',
@@ -101,8 +139,6 @@ async function detectUserLocation() {
             
             if (response.ok) {
                 const data = await response.json();
-                console.log(`📡 Resposta da ${api.name}:`, data);
-                
                 const location = api.parse(data);
                 
                 if (location.city && location.state && 
@@ -110,32 +146,18 @@ async function detectUserLocation() {
                     location.city.trim() !== '' && location.state.trim() !== '') {
                     
                     userLocation = { city: location.city, state: location.state };
-                    
-                    console.log(`✅ Localização encontrada via ${api.name}: ${location.city}, ${location.state}`);
-                    
-                    // Atualizar display
-                    setTimeout(() => {
-                        updateLocationDisplay(location.city, location.state);
-                    }, 200);
-                    
-                    return; // Sucesso! Parar de tentar outras APIs
-                } else {
-                    console.log(`❌ ${api.name} retornou dados inválidos:`, location);
+                    updateLocationDisplay(location.city, location.state);
+                    return;
                 }
-            } else {
-                console.log(`❌ ${api.name} retornou status ${response.status}`);
             }
         } catch (error) {
-            console.log(`❌ Erro na ${api.name}:`, error.message);
+            continue;
         }
     }
     
-    // Se chegou aqui, nenhuma API funcionou
-    console.log('🚨 Todas as APIs falharam, usando localização padrão');
-    updateLocationDisplay(userLocation.city, userLocation.state);
+    updateLocationDisplay('Localização', 'não detectada');
 }
 
-// Inicializar após carregamento do DOM
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', detectUserLocation);
 } else {
