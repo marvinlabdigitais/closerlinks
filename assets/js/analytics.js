@@ -1,7 +1,7 @@
 // Configuração ofuscada
 const config = (function() {
     const _0x1a2b = atob('OTE2MTQyNjA3MDQ2MDA0'); // Facebook Pixel ID ofuscado
-    const _0x3c4d = atob('RUFBU0JXV25RV2VFQlB0RHRUdm1PamlBRmN6N1BVRGdhb1JUYWp1ZFhPNTRKV0JCUzdET1ZrMUo3emNWaUREZ3FBTEZIaEluRFpDUlpDT2s5OVpBS2NYbEJBSzl5WkFKaWJJNjlKcjdqOXpicVlUZERYZ2FxV1QxVUNGN1NROXRiWkNwMVc4Mk1kQWlGR2lWVjlHY3FOR0hhc25VQWtJbGx1MzhTZ0RaQ1ZzTGNVVnpoYnZESjk0eWsycldiOGlsb0lFUVpaRFpE'); // API Token ofuscado
+    const _0x3c4d = atob('RUFBU0JXV25RV2VFQlAzbVMxRzMzVmhDRm82d2laQzBTR0EzTW8wY01Ld0FaQ2xNYnFsUUduYmFTUnRrMXd3RWhyQkZNeHJSWkNha1FXUmtEV2drSDhWZVpBcEhpOUVRV21zUXloUGVMZjlISjVPSklWSjhqMkpvYUg3MFpBaEJJaVpDb3NSaE5RdzhnUVY2Vm8xMm5PNzdIbUc0MW9IVXhFWkJQUDMwck0xeWk3WUJDTjlhc29FdFdDOFBNWkFRTURuanZJZ1pEWkQ='); // API Token ofuscado
     return {
         pixelId: _0x1a2b,
         apiToken: _0x3c4d,
