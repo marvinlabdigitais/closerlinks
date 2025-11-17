@@ -16,6 +16,7 @@ config.json
 secrets.json
 *.key
 *.pem
+assets/js/runtime-config.js
 
 # IDE files
 .vscode/

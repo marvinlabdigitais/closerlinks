@@ -1,17 +1,15 @@
-// Configuração ofuscada
-const config = (function() {
-    const _0x1a2b = atob('OTE2MTQyNjA3MDQ2MDA0'); // Facebook Pixel ID ofuscado
-    const _0x3c4d = atob('RUFBU0JXV25RV2VFQlAzbVMxRzMzVmhDRm82d2laQzBTR0EzTW8wY01Ld0FaQ2xNYnFsUUduYmFTUnRrMXd3RWhyQkZNeHJSWkNha1FXUmtEV2drSDhWZVpBcEhpOUVRV21zUXloUGVMZjlISjVPSklWSjhqMkpvYUg3MFpBaEJJaVpDb3NSaE5RdzhnUVY2Vm8xMm5PNzdIbUc0MW9IVXhFWkJQUDMwck0xeWk3WUJDTjlhc29FdFdDOFBNWkFRTURuanZJZ1pEWkQ='); // API Token ofuscado
-    return {
-        pixelId: _0x1a2b,
-        apiToken: _0x3c4d,
-        sendPageView: !0,
-        sendViewContent: !0,
-        sendScrollTracking: !0,
-        sendTimeOnPage: !0,
-        engagementTimer: 0xea60 // 60000 em hex
-    };
-})();
+// Configuração dinâmica carregada do runtime (gerado via build)
+const runtimeConfig = window.__RUNTIME_CONFIG__ || {};
+const config = {
+    pixelId: runtimeConfig.pixelId || '',
+    apiToken: runtimeConfig.apiToken || '',
+    sendPageView: true,
+    sendViewContent: true,
+    sendScrollTracking: true,
+    sendTimeOnPage: true,
+    engagementTimer: 0xea60 // 60000 em hex
+};
+
 function getCookie(name) {
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {
@@ -20,6 +18,7 @@ function getCookie(name) {
     }
     return null;
 }
+
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0;
@@ -27,12 +26,18 @@ function generateUUID() {
         return v.toString(16);
     });
 }
+
 function initializeFacebookPixel() {
+    if (!config.pixelId) {
+        console.warn('⚠️ Facebook Pixel ID não configurado. Defina FB_PIXEL_ID e regenere runtime-config.');
+        return;
+    }
     !function(f,b,e,v,n,t,s) {
         if(f.fbq) return;
         n = f.fbq = function() {
             n.callMethod ? n.callMethod.apply(n,arguments) : n.queue.push(arguments)
         };
+
         if(!f._fbq) f._fbq = n;
         n.push = n;
         n.loaded = !0;
@@ -46,15 +51,16 @@ function initializeFacebookPixel() {
     }(window, document,'script', 'https://connect.facebook.net/en_US/fbevents.js');
     const userData = collectUserData();
     fbq('init', config.pixelId, userData);
-    
+
     // Configurar API de Conversões
     if (config.apiToken) {
         fbq('set', 'accessToken', config.apiToken);
         console.log('🔑 API de Conversões configurada');
     }
-    
+
     console.log('✅ Facebook Pixel inicializado');
 }
+
 function collectUserData() {
     const fbc = getCookie('_fbc');
     const fbp = getCookie('_fbp');
@@ -69,25 +75,42 @@ function collectUserData() {
     userData.external_id = userId;
     return userData;
 }
+
 const eventsTracked = {};
-function trackEvent(eventName, parameters = {}) {
-    if (eventsTracked[eventName]) return;
-    eventsTracked[eventName] = true;
+
+function trackEvent(eventName, parameters = {}, options = {}) {
+    const shouldDedupe = !!options.dedupe;
+    if (shouldDedupe && eventsTracked[eventName]) return;
+    if (shouldDedupe) {
+        eventsTracked[eventName] = true;
+    }
+    if (typeof fbq !== 'function') {
+        console.warn(`❌ fbq não disponível para evento: ${eventName}`);
+        return;
+    }
     try {
-        fbq('track', eventName, parameters);
+        const eventOptions = { eventID: generateUUID() };
+        fbq('track', eventName, parameters, eventOptions);
         console.log(`📊 Evento rastreado: ${eventName}`, parameters);
     } catch (error) {
         console.warn('❌ Erro ao rastrear evento:', error);
     }
 }
+
 function trackCustomEvent(eventName, parameters = {}) {
+    if (typeof fbq !== 'function') {
+        console.warn(`❌ fbq não disponível para evento customizado: ${eventName}`);
+        return;
+    }
     try {
-        fbq('trackCustom', eventName, parameters);
+        const eventOptions = { eventID: generateUUID() };
+        fbq('trackCustom', eventName, parameters, eventOptions);
         console.log(`📊 Evento customizado: ${eventName}`, parameters);
     } catch (error) {
         console.warn('❌ Erro ao rastrear evento customizado:', error);
     }
 }
+
 function setupScrollTracking() {
     if (!config.sendScrollTracking) return;
     const scrollMilestones = [25, 50, 75, 90];
@@ -105,12 +128,14 @@ function setupScrollTracking() {
     }
     window.addEventListener('scroll', handleScroll, { passive: true });
 }
+
 function setupTimeTracking() {
     if (!config.sendTimeOnPage) return;
     setTimeout(() => {
         trackCustomEvent('TimeEngagement_1min');
     }, config.engagementTimer);
 }
+
 function setupLinkTracking() {
     document.addEventListener('click', function(event) {
         const link = event.target.closest('a');
@@ -118,9 +143,9 @@ function setupLinkTracking() {
         const href = link.href;
         const linkText = link.textContent.trim();
         const dataName = link.getAttribute('data-name');
-        
+
         if (!href) return;
-        
+
         // Tracking específico por botão
         if (href.includes('stellabeghini.com/privacy') || dataName === 'Privacy') {
             trackEvent('Contact', { 
@@ -132,7 +157,7 @@ function setupLinkTracking() {
                 source: 'bio_link'
             });
         }
-        
+
         if (href.includes('stellabeghini.com/redirect') || dataName === 'Telegram' || linkText.includes('TELEGRAM')) {
             trackEvent('Contact', { 
                 contact_method: 'telegram',
@@ -143,7 +168,7 @@ function setupLinkTracking() {
                 source: 'bio_link'
             });
         }
-        
+
         // Tracking genérico para links externos (excluindo seus domínios)
         if (!href.includes(window.location.hostname) && 
             !href.includes('stellabeghini.com') && 
@@ -154,18 +179,19 @@ function setupLinkTracking() {
                 button_name: dataName || 'unknown'
             });
         }
-        
+
         // Tracking específico para WhatsApp (caso adicione depois)
         if (href.includes('wa.me') || href.includes('whatsapp')) {
             trackEvent('Contact', { contact_method: 'whatsapp' });
         }
-        
+
         // Tracking específico para Telegram direto
         if (href.includes('t.me') || href.includes('telegram.me')) {
             trackEvent('Contact', { contact_method: 'telegram_direct' });
         }
     });
 }
+
 (function() {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
@@ -177,10 +203,10 @@ function setupLinkTracking() {
         initializeFacebookPixel();
         setTimeout(() => {
             if (config.sendPageView) {
-                trackEvent('PageView');
+                trackEvent('PageView', {}, { dedupe: true });
             }
             if (config.sendViewContent) {
-                trackEvent('ViewContent');
+                trackEvent('ViewContent', {}, { dedupe: true });
             }
         }, 100);
         setupScrollTracking();
